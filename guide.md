@@ -1,8 +1,12 @@
-npm install -g nestjs/cli
+# NestJS + Drizzle ORM + PostgreSQL Setup Guide
 
-OR 
+## Installing NestJS CLI
 
-npm install -g nestjs/cli@latest
+```bash
+npm install -g @nestjs/cli
+# OR
+npm install -g @nestjs/cli@latest
+
 nest new nestjs-drizzle 
 choose pnpm as package manager 
 
