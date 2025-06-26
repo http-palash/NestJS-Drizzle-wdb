@@ -1,140 +1,172 @@
-NestJS + Drizzle ORM + PostgreSQL Setup Guide
-Overview
-This guide walks you through setting up a NestJS project integrated with Drizzle ORM and PostgreSQL, including Docker setup and useful commands to get started quickly.
+# Setting Up a NestJS Project with Drizzle and PostgreSQL
 
-Prerequisites
-Node.js & npm installed
+## Installation
 
-pnpm installed (preferred package manager)
+Install the NestJS CLI globally:
 
-Docker & WSL (for Windows users)
-
-PostgreSQL (via Docker container)
-
-pgAdmin 4 (optional, for managing PostgreSQL visually)
-
-Step 1: Install NestJS CLI
-bash
-Copy
-Edit
+```bash
 npm install -g @nestjs/cli
-# OR install latest version explicitly
+```
+
+OR to ensure the latest version:
+
+```bash
 npm install -g @nestjs/cli@latest
-Step 2: Create a new NestJS project
-bash
-Copy
-Edit
+```
+
+Create a new NestJS project with pnpm as the package manager:
+
+```bash
 nest new nestjs-drizzle
-Choose pnpm as the package manager when prompted
+```
 
-Step 3: Install core NestJS dependencies
-bash
-Copy
-Edit
-pnpm add @nestjs/common @nestjs/core
-Step 4: Project structure overview (src/ directory)
-main.ts
+When prompted, choose `pnpm` as the package manager.
 
-Entry point of the application
+Install core NestJS dependencies:
 
-Contains the bootstrap() function which creates the app using AppModule
+```bash
+npm install @nestjs/common @nestjs/core
+```
 
-Starts the HTTP server on port 3000: app.listen(3000)
+## Project Structure
 
-This is where HTTP traffic is accepted
+### `src` Directory
 
-app.module.ts
+1. **`main.ts`**
+   - **Purpose**: Entry point of the application.
+   - **Details**:
+     - Calls the `bootstrap` function to create the application using the `AppModule`.
+     - Starts the Express HTTP server by calling `app.listen(3000)` to listen for HTTP connections on port 3000.
+     - Enables HTTP operations at this endpoint.
 
-Root module where application components are wired
+2. **`app.module.ts` (AppModule)**
+   - **Purpose**: Central module to wire up controllers and providers.
+   - **Details**:
+     - Initializes `AppController` as a controller.
+     - Registers `AppService` as a provider.
+     - **Provider**: Can be injected into other parts of the application via dependency injection.
+     - **Controller**: Entry point for HTTP traffic.
 
-Registers AppController as a controller and AppService as a provider
+3. **`app.controller.ts`**
+   - **Purpose**: Handles HTTP requests.
+   - **Details**:
+     - Decorated with `@Controller` to mark it as a controller.
+     - Injects `AppService` via the constructor for dependency injection.
+     - Exposes a single `@Get` route that calls the `getHello()` function from `AppService`.
 
-Providers are injectable services available throughout the app
+4. **`app.service.ts`**
+   - **Purpose**: Contains business logic.
+   - **Details**:
+     - Marked with `@Injectable` decorator, enabling dependency injection into other NestJS classes.
+     - Contains a `getHello()` function that returns a string.
+     - Registered as a provider, allowing it to be injected into controllers or other services.
 
-Controllers handle incoming HTTP requests
+**Note**: All providers and controllers are wired together in `AppModule`, which is bootstrapped by the `bootstrap` function in `main.ts`.
 
-app.controller.ts
+## Starting the Project
 
-Decorated with @Controller(), marking it as a controller
+In `package.json`, the following script is used to run the project in development mode:
 
-Injects AppService via constructor dependency injection
-
-Defines a simple @Get() route exposing the getHello() method
-
-app.service.ts
-
-Marked as a provider with @Injectable()
-
-Contains business logic, here the getHello() method that returns a greeting string
-
-Can be injected into other components via DI
-
-Step 5: Running the project in development mode
-In your package.json, add the following script:
-
-json
-Copy
-Edit
-"scripts": {
-  "start:dev": "nest start --watch"
+```json
+{
+  "scripts": {
+    "start:dev": "nest start --watch"
+  }
 }
-This runs the app in watch mode, recompiling on code changes
+```
 
-Run:
+- **Purpose**: The `start:dev` script runs the project in watch mode, automatically recompiling on code changes.
 
-bash
-Copy
-Edit
-pnpm run start:dev
-Step 6: Setup Docker and PostgreSQL
-Enable Windows features for Docker (Windows only)
-powershell
-Copy
-Edit
+## Setting Up Docker and PostgreSQL
+
+### Enable Windows Features (Windows Users)
+
+Enable Hyper-V and Containers:
+
+```powershell
 Enable-WindowsOptionalFeature -Online -FeatureName $("Microsoft-Hyper-V", "Containers") -All
-Install and configure WSL
-bash
-Copy
-Edit
+```
+
+### Install WSL and Docker
+
+Install WSL (Windows Subsystem for Linux):
+
+```bash
 wsl --install
+```
+
+Check installed WSL distributions:
+
+```bash
 wsl --list --verbose
-Start Docker Compose with PostgreSQL container
-Create a docker-compose.yml file with PostgreSQL configuration and then run:
+```
 
-bash
-Copy
-Edit
+Build and start the Docker containers:
+
+```bash
 docker-compose up --build
-Step 7: Install and configure pgAdmin 4
-Download pgAdmin 4 for Windows:
+```
 
-https://www.postgresql.org/ftp/pgadmin/pgadmin4/v9.4/windows/
+### Docker Compose Configuration
 
-Use pgAdmin to connect to your running PostgreSQL container:
+Set up a `docker-compose.yml` file to run a PostgreSQL container:
 
-Register a new server
+```yaml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-Name: Local
+volumes:
+  postgres_data:
+```
 
-Host: localhost
+### Install pgAdmin 4
 
-Port: 5432
+Download and install pgAdmin 4 from:
 
-Password: your container password
+[pgAdmin 4 Download](https://www.postgresql.org/ftp/pgadmin/pgadmin4/v9.4/windows/)
 
-Step 8: Install Drizzle ORM and dependencies
-bash
-Copy
-Edit
+### Connect pgAdmin to PostgreSQL
+
+1. Open pgAdmin 4.
+2. Register a server:
+   - **Name**: Local
+   - **Host**: localhost
+   - **Port**: 5432
+   - **Username**: postgres
+   - **Password**: example
+   - **Database**: mydatabase
+
+## Integrating Drizzle ORM
+
+Install Drizzle ORM and related dependencies:
+
+```bash
 pnpm add drizzle-orm pg
 pnpm add -D drizzle-kit @types/pg
-Step 9: Load environment variables with NestJS Config Module
-bash
-Copy
-Edit
+```
+
+### Configure Environment Variables
+
+Install the NestJS config module to manage environment variables:
+
+```bash
 pnpm i @nestjs/config
-Use this to inject environment variables securely into your application
+```
 
-References
-Drizzle ORM PostgreSQL guide: https://orm.drizzle.team/docs/get-started/postgresql-new
+**Note**: The `@nestjs/config` package allows injecting environment variables into the application using NestJS's configuration system.
 
+## Reference
+
+For more details on using Drizzle ORM with PostgreSQL, refer to the official documentation:
+
+[Drizzle ORM PostgreSQL Guide](https://orm.drizzle.team/docs/get-started/postgresql-new)
